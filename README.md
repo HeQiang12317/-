@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>智能体题库 · 在线测验</title>
+<title>智能体知识训练 · 在线测验</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
