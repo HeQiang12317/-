@@ -1,1 +1,339 @@
-# -
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>智能体题库 · 在线测验</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Roboto, 'Helvetica Neue', system-ui, sans-serif;
+    background: #f1f4f9;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* ========= 新增：顶部大标题栏 ========= */
+  .quiz-header {
+    width: 100%;
+    text-align: center;
+    padding: 20px 0 16px;
+    background: rgba(0,0,0,0.02);
+    border-bottom: 2px solid #4f46e5;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 16px rgba(79, 70, 229, 0.08);
+  }
+  .quiz-header .main-title {
+    font-size: 2.4rem;
+    font-weight: 800;
+    background: linear-gradient(to right, #4338ca, #6366f1, #4f46e5);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: 3px;
+  }
+  .quiz-header .sub-title {
+    font-size: 0.95rem;
+    color: #64748b;
+    margin-top: 4px;
+    letter-spacing: 1px;
+  }
+
+  /* ========= 原有容器样式 ========= */
+  .container {
+    width: 100%;
+    max-width: 720px;
+    background: white;
+    border-radius: 28px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.06);
+    padding: 2.2rem;
+    margin-bottom: 30px;
+  }
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+  .q-counter {
+    background: #eef2ff;
+    padding: 0.4rem 1.1rem;
+    border-radius: 30px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #4f46e5;
+  }
+
+  /* 题型标签 */
+  .type-badge {
+    display: inline-block;
+    padding: 0.35rem 1.1rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    margin-bottom: 0.3rem;
+  }
+  .type-badge.single { background: #e0e7ff; color: #4338ca; }
+  .type-badge.multi  { background: #fce7f3; color: #be185d; }
+  .type-badge.fill   { background: #d1fae5; color: #065f46; }
+
+  .question-text {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #0f172a;
+    margin: 0.8rem 0 2rem;
+    line-height: 1.7;
+  }
+  .options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    margin-bottom: 1.8rem;
+  }
+  .option {
+    background: #f8fafc;
+    border: 2px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 1rem 1.3rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    user-select: none;
+  }
+  .option:hover { background: #f1f5f9; border-color: #cbd5e1; }
+  .option.correct { background: #dcfce7; border-color: #22c55e; color: #166534; }
+  .option.wrong   { background: #fee2e2; border-color: #ef4444; color: #991b1b; }
+  .option.disabled { pointer-events: none; opacity: 0.95; }
+  .option input[type="checkbox"] { accent-color: #4f46e5; transform: scale(1.15); margin-right: 0.2rem; }
+
+  .fill-area {
+    display: flex;
+    gap: 0.8rem;
+    align-items: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+  }
+  .fill-area input {
+    flex: 1 1 200px;
+    padding: 0.9rem 1.3rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 16px;
+    font-size: 1rem;
+    outline: none;
+    transition: border 0.2s, background 0.2s;
+  }
+  .fill-area input:focus { border-color: #6366f1; }
+  .fill-area input.correct { border-color: #22c55e; background: #f0fdf4; }
+  .fill-area input.wrong   { border-color: #ef4444; background: #fef2f2; }
+
+  .submit-btn, .nav-btn {
+    background: #4f46e5;
+    color: white;
+    border: none;
+    border-radius: 14px;
+    padding: 0.8rem 1.6rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    font-size: 0.95rem;
+  }
+  .submit-btn:hover { background: #4338ca; }
+  .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .nav-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 2rem;
+  }
+  .nav-btn {
+    background: #e2e8f0;
+    color: #1e293b;
+    min-width: 110px;
+  }
+  .nav-btn:hover { background: #cbd5e1; }
+  .nav-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  .feedback {
+    text-align: center;
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin: 1rem 0 0.2rem;
+    min-height: 2rem;
+  }
+</style>
+</head>
+<body>
+
+  <!-- ========= 新增：顶部大标题 ========= -->
+  <div class="quiz-header">
+    <h1 class="main-title">📚 智能体题库</h1>
+    <div class="sub-title">—— AI Agent 知识测验 ——</div>
+  </div>
+
+  <div class="container">
+    <div class="header">
+      <span class="q-counter" id="qCounter">1 / 35</span>
+    </div>
+
+    <!-- 题型标签 -->
+    <div id="typeBadge" class="type-badge single">单选题</div>
+    <div id="questionText" class="question-text"></div>
+
+    <div id="optionsContainer"></div>
+    <div id="feedback" class="feedback"></div>
+
+    <div class="nav-container">
+      <button class="nav-btn" id="prevBtn">← 上一题</button>
+      <button class="nav-btn" id="nextBtn">下一题 →</button>
+    </div>
+  </div>
+
+<script>
+  // ================= 题库数据 =================
+  const quizData = [
+    { type: 'single', question: '1.核心构成：在智能体的类比中，负责像人类一样分析指令、推演意图并生成决策的核心部分是？', options: ['A. 感知模块', 'B. 大语言模型 (LLM)', 'C. 记忆模块', 'D. 工具箱'], answer: 'B' },
+    { type: 'single', question: '2.感知输入：智能体的"眼睛"对应的是感知模块，下列哪项不属于该模块负责接收的外部信息？', options: ['A. 文本', 'B. 视觉', 'C. 语音', 'D. 代码执行'], answer: 'D' },
+    { type: 'single', question: '3.记忆机制：智能体的"海马体"负责记忆，其中长期记忆通常通过什么技术存储用户的偏好（如"不喜欢爬山"）？', options: ['A. 关系型数据库', 'B. 向量数据库', 'C. 本地文件', 'D. 缓存系统'], answer: 'B' },
+    { type: 'single', question: '4.执行工具：为了让智能体真正"动手干活"，如查询天气或发送邮件，需要依赖哪个模块调用外部API？', options: ['A. 大脑', 'B. 策划师', 'C. 工具箱', 'D. 感知模块'], answer: 'C' },
+    { type: 'single', question: '5.ReAct概念：ReAct循环是智能体的"操盘手"，它的核心理念是什么？', options: ['A. 想完了再做', 'B. 仅凭内部记忆瞎猜', 'C. 一边想一边做', 'D. 随机尝试'], answer: 'C' },
+    { type: 'single', question: '6.运行机制：T-A-O循环是智能体解决问题的基础，其中A代表的环节是？', options: ['A. 思考 (Thought)', 'B. 行动 (Action)', 'C. 观察 (Observation)', 'D. 答复 (Answer)'], answer: 'B' },
+    { type: 'single', question: '7.闭环逻辑：在T-A-O循环中，智能体获取工具执行后的返回结果属于哪个环节', options: ['A. 思考', 'B. 行动', 'C. 观察', 'D. 规划'], answer: 'C' },
+    { type: 'single', question: '8.规划能力：在旅行规划案例中，智能体将模糊的人类语言转化为精确的执行标准，主要体现了智能体的哪项能力？', options: ['A. 记忆存储', 'B. 自然语言理解与约束转化', 'C. 仅仅随机生成', 'D. 语音合成'], answer: 'B' },
+    { type: 'single', question: '9.工具调用：在预订酒店环节，智能体是通过调用什么来在西湖附近进行地毯式搜索的？', options: ['A. 天气API', 'B. 地图API', 'C. 酒店API', 'D. 数据库查询语句'], answer: 'B' },
+    { type: 'single', question: '10.本质定义：微课总结中提到，AI智能体的本质进化是什么？', options: ['A. 从"顾问"到"实习生"的跨越', 'B. 从"软件"到"硬件"的跨越', 'C. 从"2D"到"3D"的跨越', 'D. 从"简单"到"复杂"的跨越'], answer: 'A' },
+    { type: 'fill', question: '11.填空题：智能体的构成中，对应"策划师"的是______模块。', answer: '规划' },
+    { type: 'fill', question: '12.填空题：感知模块负责接受文本、视觉、______等外部信息。', answer: '语音' },
+    { type: 'fill', question: '13.填空题：记忆模块包含短期记忆和长期记忆，通过记忆模块让智能体越用越______你。', answer: '懂' },
+    { type: 'fill', question: '14.填空题：ReAct循环的全称是 Reasoning and ______。', answer: 'Acting' },
+    { type: 'fill', question: '15.填空题：T-A-O循环中的T代表______（Thought）。', answer: 'Thought' },
+    { type: 'fill', question: '16.填空题：在T-A-O循环中，基于思考结果，调用外部工具的过程称为______。', answer: '行动' },
+    { type: 'fill', question: '17.填空题：在杭州案例中，为了符合"带父母"的设定，智能体规划了______路线。', answer: '平路' },
+    { type: 'fill', question: '18.填空题：智能体生成了包含天气提醒的完整计划，调用了______API。', answer: '天气' },
+    { type: 'fill', question: '19.填空题：智能体的四大核心模块：大脑、规划、记忆和______。', answer: '工具箱' },
+    { type: 'fill', question: '20.填空题："AI智能体 = 会思考的大脑 + ______"。', answer: '会执行的手' },
+    { type: 'single', question: '21.最能体现生成式人工智能"从数据中创造新内容"的是', options: ['A. 动态生成个性化练习题和答案解析', 'B. 自动判断知识薄弱点并归类', 'C. 自动推送学习任务和提醒', 'D. 识别高频问题并生成统计报告'], answer: 'A' },
+    { type: 'single', question: '22.以下不属于算力构成要素的是', options: ['A. 数据加密能力', 'B. 处理器性能', 'C. 数据传输能力', 'D. 并行计算能力'], answer: 'A' },
+    { type: 'single', question: '23.数据清洗的主要目的是', options: ['A. 去除噪声、填补缺失值、修正错误数据', 'B. 将数据转换为数值型格式', 'C. 对数据进行分类标注', 'D. 提高数据维度'], answer: 'A' },
+    { type: 'single', question: '24.不能直接提升自动化标注水平的是', options: ['A. 数据可视化', 'B. 数据质量', 'C. 计算资源', 'D. 算法能力'], answer: 'A' },
+    { type: 'single', question: '25.知识表示的最核心目标是', options: ['A. 增强数据可视化效果', 'B. 提高数据存储效率', 'C. 提高数据计算效率', 'D. 将知识转化为机器可处理的形式'], answer: 'D' },
+    { type: 'single', question: '26.知识库与知识图谱的主要区别', options: ['A. 知识库侧重存储，知识图谱强调图结构和语义关联', 'B. 知识库强调实体关系，知识图谱强调静态存储', 'C. 知识库支持语义推理，知识图谱仅支持检索', 'D. 知识库以图结构组织，知识图谱以表格存储'], answer: 'A' },
+    { type: 'single', question: '27.AI在家庭生活中的典型应用', options: ['A. 智能音箱', 'B. 无线投屏投影仪', 'C. 远程预约电饭煲', 'D. 变频空调'], answer: 'A' },
+    { type: 'single', question: '28.机器学习数据集通常划分为', options: ['A. 训练集、验证集、测试集', 'B. 非结构化/结构化', 'C. 视频/文本/声音/图像', 'D. 离散/连续'], answer: 'A' },
+    { type: 'single', question: '29.银行依据年龄、婚姻、收入等决定贷款，最适合的算法', options: ['A. 一元线性回归', 'B. K-Means', 'C. 决策树', 'D. 多元线性回归'], answer: 'C' },
+    { type: 'single', question: '30.提示工程（Prompt Engineering）的主要目的', options: ['A. 删除冗余参数', 'B. 从零训练模型', 'C. 减少算力需求', 'D. 引导模型生成期望输出'], answer: 'D' },
+    { type: 'single', question: '31.开发能自动理解并追问的在线客服，最合适方案', options: ['A. 大语言模型+专用知识库智能代理', 'B. 固定问答对自动回复', 'C. 关键词检索标准答案', 'D. 通用大模型对话机器人'], answer: 'A' },
+    { type: 'single', question: '32.提升大模型疾病诊断报告解读准确性，最有效手段', options: ['A. 增加分布式计算节点', 'B. 引入专家标注数据集', 'C. 引入多语言文献', 'D. 增加无标注样本'], answer: 'B' },
+    { type: 'single', question: '33.训练误差极低、测试误差显著增加，这种现象是', options: ['A. 过拟合', 'B. 欠拟合', 'C. 数据泄露', 'D. 数据增强'], answer: 'A' },
+    { type: 'multi', question: '34.关于人工智能算法的核心特性，下列描述正确的是', options: ['A. 逻辑回归通过极大似然估计参数', 'B. 分类算法可输出概率或类别标签', 'C. 一元线性回归可用梯度下降', 'D. 数据预处理仅处理异常值', 'E. 算法效果与算力无关'], answer: ['A','B','C'] },
+    { type: 'multi', question: '35.关于人工智能典型算法的特性，下列描述正确的是', options: ['A. 根据距离动态调整聚类中心', 'B. RNN更适合序列数据', 'C. 决策树可直观展示决策过程', 'D. 线性回归输出类别标签值', 'E. 逻辑回归处理回溯问题'], answer: ['A','B','C'] }
+  ];
+
+  const total = quizData.length;
+  let currentIndex = 0;
+  const userState = Array(total).fill(null).map(() => ({ answered: false, correct: null, userAnswer: null }));
+
+  const qCounterEl = document.getElementById('qCounter');
+  const typeBadgeEl = document.getElementById('typeBadge');
+  const questionTextEl = document.getElementById('questionText');
+  const optionsContainer = document.getElementById('optionsContainer');
+  const feedbackEl = document.getElementById('feedback');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+
+  function setTypeBadge(type) {
+    typeBadgeEl.className = 'type-badge';
+    if (type === 'single') { typeBadgeEl.textContent = '单选题'; typeBadgeEl.classList.add('single'); }
+    else if (type === 'multi') { typeBadgeEl.textContent = '多选题'; typeBadgeEl.classList.add('multi'); }
+    else if (type === 'fill') { typeBadgeEl.textContent = '填空题'; typeBadgeEl.classList.add('fill'); }
+  }
+
+  function render() {
+    const q = quizData[currentIndex];
+    const s = userState[currentIndex];
+    qCounterEl.textContent = `${currentIndex+1} / ${total}`;
+    setTypeBadge(q.type);
+    questionTextEl.textContent = q.question;
+    feedbackEl.innerHTML = '';
+    optionsContainer.innerHTML = '';
+
+    if (q.type === 'single') {
+      const div = document.createElement('div'); div.className = 'options';
+      q.options.forEach(opt => {
+        const letter = opt.charAt(0);
+        const optDiv = document.createElement('div'); optDiv.className = 'option'; optDiv.textContent = opt;
+        if (s.answered) {
+          optDiv.classList.add('disabled');
+          if (letter === q.answer) optDiv.classList.add('correct');
+          else if (s.userAnswer === letter) optDiv.classList.add('wrong');
+        } else {
+          optDiv.addEventListener('click', () => { s.answered = true; s.correct = (letter === q.answer); s.userAnswer = letter; render(); });
+        }
+        div.appendChild(optDiv);
+      });
+      optionsContainer.appendChild(div);
+    } else if (q.type === 'multi') {
+      const div = document.createElement('div'); div.className = 'options';
+      const cbs = [];
+      q.options.forEach(opt => {
+        const letter = opt.charAt(0);
+        const label = document.createElement('label'); label.className = 'option';
+        if (s.answered) label.classList.add('disabled');
+        const cb = document.createElement('input'); cb.type = 'checkbox'; cb.value = letter;
+        cb.disabled = s.answered;
+        if (s.answered && s.userAnswer?.includes(letter)) cb.checked = true;
+        if (s.answered) {
+          if (q.answer.includes(letter)) label.classList.add('correct');
+          else if (s.userAnswer?.includes(letter)) label.classList.add('wrong');
+        }
+        label.appendChild(cb); label.appendChild(document.createTextNode(' ' + opt));
+        div.appendChild(label); cbs.push(cb);
+      });
+      const btn = document.createElement('button'); btn.className = 'submit-btn'; btn.textContent = '提交答案';
+      if (s.answered) btn.disabled = true;
+      btn.addEventListener('click', () => {
+        const sel = cbs.filter(cb=>cb.checked).map(cb=>cb.value);
+        if (!sel.length) return;
+        s.answered = true;
+        s.correct = ([...q.answer].sort().join('') === [...sel].sort().join(''));
+        s.userAnswer = sel;
+        render();
+      });
+      optionsContainer.appendChild(div);
+      optionsContainer.appendChild(btn);
+    } else if (q.type === 'fill') {
+      const div = document.createElement('div'); div.className = 'fill-area';
+      const input = document.createElement('input'); input.placeholder = '请输入答案';
+      if (s.answered) { input.value = s.userAnswer||''; input.disabled = true; input.classList.add(s.correct?'correct':'wrong'); }
+      const btn = document.createElement('button'); btn.className = 'submit-btn'; btn.textContent = '提交答案';
+      if (s.answered) btn.disabled = true;
+      btn.addEventListener('click', ()=>{
+        const v = input.value.trim(); if (!v) return;
+        s.answered = true; s.correct = (v.toLowerCase() === q.answer.toLowerCase()); s.userAnswer = v; render();
+      });
+      div.appendChild(input); div.appendChild(btn);
+      optionsContainer.appendChild(div);
+    }
+
+    if (s.answered) {
+      feedbackEl.innerHTML = s.correct ? '<span style="color:#16a34a;">✓ 回答正确</span>' : '<span style="color:#dc2626;">✗ 回答错误</span>';
+    }
+    prevBtn.disabled = (currentIndex === 0);
+    nextBtn.disabled = (currentIndex === total-1);
+  }
+
+  prevBtn.addEventListener('click', ()=>{ if(currentIndex>0){ currentIndex--; render(); } });
+  nextBtn.addEventListener('click', ()=>{ if(currentIndex<total-1){ currentIndex++; render(); } });
+  render();
+</script>
+</body>
+</html>
